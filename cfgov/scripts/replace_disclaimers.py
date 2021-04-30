@@ -32,7 +32,9 @@ def replace_disclaimers(pk=None):
         stream_data = page.content.raw_data
         body = stream_data[0]['value']
         for octo in octos:
-            if octo in body and splitter in body:
+            if octo not in body:
+                continue
+            if splitter in body:
                 page.content[0] = ('content', body.split(splitter)[0])
                 page.content.append(('reusable_text', snippet.text))
                 page.save()
