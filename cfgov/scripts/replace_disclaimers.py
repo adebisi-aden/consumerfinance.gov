@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 
 from v1.models import LegacyNewsroomPage, ReusableText
 
+from wagtail.core.models import Page
+
 octos = ["###", "# # #"]
 
 en_disclaimer = ReusableText.objects.get(
@@ -17,31 +19,30 @@ disclaimer_map = {
 script_user_pk = os.getenv('SCRIPT_USER_PK', 9999)
 user = User.objects.filter(id=script_user_pk).first()
 
-legacy_string = """
-The Consumer Financial Protection Bureau is a 21st century agency that helps
-"""
+legacy_string = """The Consumer Financial Protection Bureau is a 21st century agency that helps consumer finance markets work by making rules more effective, by consistently and fairly enforcing those rules, and by empowering consumers to take more control over their economic lives."""
 
 
-#  1 page with following content fixed manually (2359)
 def replace_disclaimers(pk=None):
-    no_disclaimers = []
+    no_octos = []
     no_splitters = []
     fix_count = 0
     if pk:
         legacy_pages = LegacyNewsroomPage.objects.filter(pk=pk)
     else:
-        legacy_pages = LegacyNewsroomPage.objects.all()
+        legacy_pages = LegacyNewsroomPage.objects.filter(live=True)
 
     for page in legacy_pages:
         snippet = disclaimer_map[page.language]
         stream_data = page.content.raw_data
+        # Handle pages with 2 content fields (arbitration notices + content)
         if len(stream_data) == 2:
             i = 1
         else:
             i = 0
         body = stream_data[i].get('value')
+        # skip pages that have no octos or have been fixed with a snippet
         if isinstance(body, int) or (octos[0] not in body and octos[1] not in body):  # noqa
-            no_disclaimers.append(f"page pk: {page.pk}, url: {page.url}")
+            no_octos.append(f"page pk: {page.pk}, url: {page.url}")
             continue
         for octo in octos:
             if octo not in body:
@@ -62,7 +63,7 @@ def replace_disclaimers(pk=None):
                     break
             if new_content is None:
                 no_splitters.append(
-                    f"No splitter for page pk: {page.pk}, url: {page.url}"
+                    f"No splitter found for page pk {page.pk}, url: {page.url}"
                 )
             else:
                 page.content[i] = ('content', new_content)
@@ -76,8 +77,8 @@ def replace_disclaimers(pk=None):
         "{}".format(
             legacy_pages.count(),
             fix_count,
-            len(no_disclaimers),
-            "\n".join(no_disclaimers))
+            len(no_octos),
+            "\n".join(no_octos))
     )
     if no_splitters:
         print(
