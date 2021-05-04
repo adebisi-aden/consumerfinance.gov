@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 
 from v1.models import LegacyNewsroomPage, ReusableText
 
-from wagtail.core.models import Page
 
 octos = ["###", "# # #"]
 
@@ -19,10 +18,35 @@ disclaimer_map = {
 script_user_pk = os.getenv('SCRIPT_USER_PK', 9999)
 user = User.objects.filter(id=script_user_pk).first()
 
-legacy_string = """The Consumer Financial Protection Bureau is a 21st century agency that helps consumer finance markets work by making rules more effective, by consistently and fairly enforcing those rules, and by empowering consumers to take more control over their economic lives."""
+legacy_string = "The Consumer Financial Protection Bureau is a 21st century \
+agency that helps consumer finance markets work by making rules more \
+effective, by consistently and fairly enforcing those rules, and by \
+empowering consumers to take more control over their economic lives."
 
 
 def replace_disclaimers(pk=None):
+    """
+    Replace manually-entered PR disclaimers with a consistent snippet version.
+
+    This script runs against all live LegacyNewsroomPages, but can be run
+    against a single page by passing in a primary key.
+
+    The commands would be:
+
+    ./cfgov/manage.py runscript replace_disclaimers
+    ./cfgov/manage.py runscript replace_disclaimers --script-args <PRMIARY KEY>
+
+    Adding a User
+
+    To keep page statuses unchanged, the script needs to publish any page it
+    fixes. The Wagtail publishing sequence expects a User, and an appropriate
+    one can safely be added to the script by setting a User primary key in the
+    environment where the script is to run. This also improves transparency,
+    by leaving a record of who made these updates in the page history.
+
+    To add the User pk, enter this line before running the script;
+    export SCRIPT_USER_PK=<USER PK>
+    """
     no_octos = []
     no_splitters = []
     fix_count = 0
