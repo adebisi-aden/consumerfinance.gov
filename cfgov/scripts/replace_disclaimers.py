@@ -48,13 +48,14 @@ def replace_disclaimers(pk=None):
             if octo not in body:
                 continue
             splitters = [
+                f'<p align="center"><span>{octo}',
+                f'<p align="center"><i>{octo}',
+                f'<p align="center">{octo}',
+                f"<p><center><strong>{octo}",
+                f"<p><strong><center>{octo}",
                 f"<p><center>{octo}",
                 f"<center>{octo}",
                 f"<p>{octo}",
-                f"<p><center><strong>{octo}",
-                f'<p align="center">{octo}',
-                f'<p align="center"><i>{octo}',
-                f'<p align="center"><span>{octo}'
             ]
             new_content = None
             for splitter in splitters:
