@@ -13,12 +13,12 @@ from django.db import models
 import requests
 
 
-# Our database has a fake school for demo purposes
-# It should be discoverable via search and API calls, but should be excluded
+# Our database has a few fake school for demos and for teaching activites.
+# They should be discoverable via search and API calls, but should be excluded
 # from cohort calculations and from College Scorecard API updates.
-FAKE_SCHOOL_PK = 999999
+FAKE_SCHOOL_PKS = [999996, 999997, 999998, 999999]
 # Our database also has 49 entries for school or school system home offices,
-# which should be excluded from school processing and comparisons.
+# which should be excluded from school search, processing and comparisons.
 OFFICE_IDS = [
     100733, 105136, 108056, 110501, 112376, 112817, 117681, 117900, 121178,
     122320, 122782, 124557, 125019, 125222, 126100, 128300, 130882, 141963,
@@ -27,7 +27,7 @@ OFFICE_IDS = [
     231156, 242671, 403399, 438665, 443368, 446978, 448336, 448381, 454218,
     461087, 481191, 483090, 485467,
 ]
-DEFAULT_EXCLUSIONS = OFFICE_IDS + [FAKE_SCHOOL_PK]
+DEFAULT_EXCLUSIONS = OFFICE_IDS + FAKE_SCHOOL_PKS
 REGION_MAP = {'MW': ['IL', 'IN', 'IA', 'KS', 'MI', 'MN',
                      'MO', 'NE', 'ND', 'OH', 'SD', 'WI'],
               'NE': ['CT', 'ME', 'MA', 'NH', 'NJ',
