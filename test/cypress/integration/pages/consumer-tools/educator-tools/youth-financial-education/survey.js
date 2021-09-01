@@ -27,6 +27,7 @@ function testWithValues( test ) {
   results.checkInitials();
   results.checkCarPositions( test.carImageX );
   results.checkNoSharing();
+  results.checkDifferentInitials();
 }
 
 describe( 'Youth Financial Education Survey', () => {
@@ -81,14 +82,5 @@ describe( 'Youth Financial Education Survey', () => {
       cy.visit( '/consumer-tools/educator-tools/youth-financial-education/survey/3-5/p2/' );
       cy.url().should( 'include', '/3-5/p1/' );
     } );
-
-    it( 'should always show encoded initials', () => {
-      cy.visit( '/consumer-tools/educator-tools/youth-financial-education/survey/3-5/view/?r=v1_3-5_10%3Az%3Ah_3ys9v%3A0nBhBR8waXKM_2CWjEmT4MVkzz4#MjcuMTZ3cXEuDg0MCw==' );
-      results.checkInitials();
-    } );
-
-    // https://www.consumerfinance.gov/consumer-tools/educator-tools/youth-financial-education/survey/3-5/view/?r=v1_3-5_10%3Az%3Ah_3ys9v%3A0nBhBR8waXKM_2CWjEmT4MVkzz4#MjcuMTZ3cXEuDg0MCw==
-
-    // http://localhost:8000/consumer-tools/educator-tools/youth-financial-education/survey/3-5/view/?r=v1_3-5_10%3Az%3Ah_3ys9v%3A0nBhBR8waXKM_2CWjEmT4MVkzz4#MjcuMTZ3cXEuDg0MCw==
   } );
 } );
