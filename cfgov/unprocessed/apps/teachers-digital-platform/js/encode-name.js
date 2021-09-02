@@ -1,23 +1,4 @@
 /**
- * Simple ROT13-style rotational cipher
- *
- * @param {string} str Input
- * @returns {string} Rotated string
- */
-function rotate( str ) {
-  const list1 = './-:?=&%# ZQXJKVWPY abcdefghijklmnopqrstuvwxyz123456789ABCDEFGHILMNORSTU';
-  const list2 = 'ZQXJKVWPY ./-:?=&%# 123456789ABCDEFGHILMNORSTUabcdefghijklmnopqrstuvwxyz';
-
-  return str
-    .split( '' )
-    .map( char => {
-      const idx = list1.indexOf( char );
-      return idx === -1 ? char : list2[idx];
-    } )
-    .join( '' );
-}
-
-/**
  * Create a hash code for a string (legacy encoding)
  *
  * Adapted from https://stackoverflow.com/a/7616484/3779
@@ -81,9 +62,8 @@ const base64UrlDecode = val => base64Decode(
  * @returns {string} Encoded string
  */
 function encode( input ) {
-  return '==' + base64UrlEncode( rotate(
-    `${ input }${ input }${ input }`
-  ) );
+  const enc = base64UrlEncode;
+  return '==' + enc( enc( enc( enc( input ) ) ) );
 }
 
 /**
@@ -97,22 +77,15 @@ function decode( encoded ) {
     return legacyDecode( encoded );
   }
 
-  // New version uses leading "==" and Base64 for URLs
-  let b64Decoded;
+  // Trim leading "=="
+  let value = encoded.substr( 2 );
+
   try {
-    b64Decoded = base64UrlDecode( encoded.substr( 2 ) );
+    const dec = base64UrlDecode;
+    return dec( dec( dec( dec( value ) ) ) );
   } catch ( err ) {
     return null;
   }
-
-  const three = rotate( b64Decoded );
-  const out = three.substr( 0, three.length / 3 );
-  if ( three !== `${ out }${ out }${ out }` ) {
-    // Tampered
-    return null;
-  }
-
-  return out;
 }
 
 /**
