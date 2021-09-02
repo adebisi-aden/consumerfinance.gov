@@ -26,10 +26,6 @@ function rotate( str ) {
  * @returns {string} Hash code
  */
 function hashCode( str ) {
-  if ( str.length === 0 ) {
-    return '0';
-  }
-
   let hash = 0;
   for ( let i = 0; i < str.length; i++ ) {
     const chr = str.charCodeAt( i );

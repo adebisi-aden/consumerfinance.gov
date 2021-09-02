@@ -29,6 +29,12 @@ describe( 'encode-name module', () => {
     } );
   } );
 
+  it( 'can reject invalid legacy values inside bas64', () => {
+    const value = window.btoa('invalid-contents');
+    const url = 'http://google.com/#' + value;
+    expect( module.decodeNameFromUrl( value ) ).toBeNull();
+  } );
+
   it( 'can decode the encoded URL', () => {
     const url = module.encodeNameInUrl( 'http://google.com/#foo', testName );
     const decoded = module.decodeNameFromUrl( url );
@@ -44,10 +50,20 @@ describe( 'encode-name module', () => {
     const url = module.encodeNameInUrl( 'http://google.com/#foo', testName );
     const m = url.match( /#(.*)+/ );
     const unaltered = `#${ m[1] }`;
+
+    // Bad format
     const altered1 = `#${ '1' + m[1] }`;
+
+    // Bad base64
+    const altered2 = `#==..${ m[1] }`;
+
+    // Valid Base64 but not repeated
+    const altered3 = '#' + m[1].substr(0, 4) + 'z' + m[1].substr(6);
 
     expect( module.decodeNameFromUrl( unaltered ) ).toEqual( testName );
     expect( module.decodeNameFromUrl( altered1 ) ).toBeNull();
+    expect( module.decodeNameFromUrl( altered2 ) ).toBeNull();
+    expect( module.decodeNameFromUrl( altered3 ) ).toBeNull();
   } );
 
   it( 'does not occasionally fail', () => {
