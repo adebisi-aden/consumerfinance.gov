@@ -1,5 +1,5 @@
 /**
- * Create a hash code for a string
+ * Create a hash code for a string (legacy encoding)
  *
  * Adapted from https://stackoverflow.com/a/7616484/3779
  *
@@ -7,10 +7,6 @@
  * @returns {string} Hash code
  */
 function hashCode( str ) {
-  if ( str.length === 0 ) {
-    return '0';
-  }
-
   let hash = 0;
   for ( let i = 0; i < str.length; i++ ) {
     const chr = str.charCodeAt( i );
@@ -23,7 +19,7 @@ function hashCode( str ) {
 }
 
 /**
- * XOR a string
+ * XOR a string (legacy encoding)
  *
  * Based on XOR Crypt v1.1.1 - http://github.com/RobLoach/xor-crypt
  * @license MIT
@@ -48,41 +44,26 @@ const x = 'x';
 const y = 'y';
 const btoa = xtoy.replace( x, b ).replace( y, a );
 const atob = xtoy.replace( x, a ).replace( y, b );
+const base64Encode = wwindow[btoa];
+const base64Decode = wwindow[atob];
+const base64UrlEncode = val => base64Encode( val )
+  .replace( /\+/g, '-' )
+  .replace( /\//g, '_' );
+const base64UrlDecode = val => base64Decode(
+  val
+    .replace( /-/g, '+' )
+    .replace( /_/g, '/' )
+);
 
 /**
- * Encode string randomly with checksum
- *
- * -> base64("<base32(xorKey)>.<hash>.<xoredString>")
+ * Encode string
  *
  * @param {string} input Input
  * @returns {string} Encoded string
  */
 function encode( input ) {
-  const attempt = key => {
-    const keyB36 = Number( key ).toString( 36 );
-    const xored = xor( input, key );
-    const hash = hashCode( input );
-
-    return wwindow[btoa](
-      [ keyB36, hash, xored ].join( '.' )
-    );
-  };
-
-  // Sometimes random gets ugly
-  const uglies = [ /[a@][s$][s$]/i, /b[i1][t+]ch/i, /(f|ph)u[ck]/i ];
-  const key = Math.ceil( Math.random() * 100 );
-
-  // Try keys until no uglies
-  for ( let i = 0; i < 100; i++ ) {
-    const out = attempt( key + i );
-    const isUgly = uglies.some( patt => patt.test( out ) );
-    if ( !isUgly ) {
-      return out;
-    }
-  }
-
-  // Oh well
-  return attempt( key );
+  const enc = base64UrlEncode;
+  return '==' + enc( enc( enc( enc( input ) ) ) );
 }
 
 /**
@@ -92,10 +73,32 @@ function encode( input ) {
  * @returns {string | null} Decoded string (or null)
  */
 function decode( encoded ) {
+  if ( encoded.indexOf( '==' ) !== 0 ) {
+    return legacyDecode( encoded );
+  }
+
+  // Trim leading "=="
+  let value = encoded.substr( 2 );
+
+  try {
+    const dec = base64UrlDecode;
+    return dec( dec( dec( dec( value ) ) ) );
+  } catch ( err ) {
+    return null;
+  }
+}
+
+/**
+ * Decode a string with legacy strategy
+ *
+ * @param {string} encoded Encoded string
+ * @returns {string | null} Decoded string (or null)
+ */
+function legacyDecode( encoded ) {
   let b64Decoded;
 
   try {
-    b64Decoded = wwindow[atob]( encoded );
+    b64Decoded = base64Decode( encoded );
   } catch ( err ) {
     return null;
   }
