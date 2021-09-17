@@ -1,5 +1,5 @@
 const module = require(
-  '../../../../../cfgov/unprocessed/apps/teachers-digital-platform/js/encode-name.js'
+  '../../../../../cfgov/unprocessed/apps/teachers-digital-platform/js/obfuscation'
 );
 
 const testName = 'Iñtërnâtiô Nàlizætiøn';
@@ -7,7 +7,7 @@ const testName = 'Iñtërnâtiô Nàlizætiøn';
 // Regular expression to check formal correctness of new encoding
 const encodingRe = /^==(?:[A-Za-z\d-_]{4})*?(?:[A-Za-z\d-_]{2}(?:==)?|[A-Za-z\d-_]{3}=?)?$/;
 
-describe( 'encode-name module', () => {
+describe( 'obfuscation module', () => {
   it( 'can encode in URL, replacing hash', () => {
     const url = module.encodeNameInUrl( 'http://google.com/#foo', testName );
     expect( ( /#foo/ ).test( url ) ).toEqual( false );
@@ -30,7 +30,7 @@ describe( 'encode-name module', () => {
   } );
 
   it( 'can reject invalid legacy values inside bas64', () => {
-    const value = window.btoa('invalid-contents');
+    const value = window.btoa( 'invalid-contents' );
     const url = 'http://google.com/#' + value;
     expect( module.decodeNameFromUrl( url ) ).toBeNull();
   } );
@@ -58,7 +58,7 @@ describe( 'encode-name module', () => {
     const altered2 = `#==..${ m[1] }`;
 
     // Valid Base64 but not repeated
-    const altered3 = '#' + m[1].substr(0, 4) + 'z' + m[1].substr(6);
+    const altered3 = '#' + m[1].substr( 0, 4 ) + 'z' + m[1].substr( 6 );
 
     expect( module.decodeNameFromUrl( unaltered ) ).toEqual( testName );
     expect( module.decodeNameFromUrl( altered1 ) ).toBeNull();

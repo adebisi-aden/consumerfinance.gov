@@ -60,7 +60,7 @@ export class TdpResultsHelpers {
      * on this site, we just re-use the one we're on.
      */
     cy.url().then( url => {
-      const newUrl = url.replace( /#.*/, '#==bm9wbm9wbm9w' );
+      const newUrl = url.replace( /#.*/, '#==Vld4V1lWTkJQVDA9' );
       cy.visit( newUrl );
       // As usual, browsers are bad at picking up hash changes until reload.
       cy.reload();
