@@ -1,11 +1,14 @@
 from unittest.mock import Mock, patch
 
+from django.core import signing
 from django.http import HttpResponse, HttpResponseRedirect
 from django.test import RequestFactory, TestCase
 
+from teachers_digital_platform.UrlEncoder import UrlEncoder
 from teachers_digital_platform.views import (
-    _find_grade_selection_url, _grade_level_page, _handle_result_url,
-    create_grade_level_page_handler, student_results, view_results
+    SurveyWizard, _find_grade_selection_url, _grade_level_page,
+    _handle_result_url, create_grade_level_page_handler, student_results,
+    view_results
 )
 
 
@@ -19,15 +22,22 @@ class TestSurveyWizard(TestCase):
 
         self.factory = RequestFactory()
 
+        key = '3-5'
+        scores = [0, 10, 15]
+        time = 1623518461
+        self.code = UrlEncoder([key]).dumps(key, scores, time)
+        self.signed_code = signing.Signer().sign(self.code)
+
     def test_create_grade_level_page_handler(self):
         response = create_grade_level_page_handler('3-5')
         assert callable(response)
 
-    def test_grade_level_page(self):
+    @patch('teachers_digital_platform.views.render_to_string')
+    def test_grade_level_page(self, mock_rts):
         test_request = self.factory.get(
             "/", HTTP_HOST="preview.localhost", SERVER_PORT=8000
         )
-
+        mock_rts.return_value = 'success'
         response = _grade_level_page(test_request, '3-5')
         self.assertIsInstance(response, HttpResponse)
         self.assertEqual(response.status_code, 200)
@@ -99,7 +109,8 @@ class TestSurveyWizard(TestCase):
         )
 
     @patch("teachers_digital_platform.views.UrlEncoder")
-    def test_handle_result_url(self, MockEncoder):
+    @patch('teachers_digital_platform.views.render_to_string')
+    def test_handle_result_url(self, mock_rts, MockEncoder):
         instance = MockEncoder.return_value
         instance.loads.return_value = {
             "key": "3-5",
@@ -110,10 +121,10 @@ class TestSurveyWizard(TestCase):
         test_request = self.factory.get(
             "/", HTTP_HOST="preview.localhost", SERVER_PORT=8000
         )
-
+        mock_rts.return_value = 'data-signed-code="signed"'
         res = _handle_result_url(test_request, "signed", "code", True)
         self.assertEqual(instance.loads.call_args[0], ('code',))
-        self.assertContains(res, 'data-signed-code="signed"')
+        self.assertEqual(res.status_code, 200)
 
     @patch("v1.models.SublandingPage")
     def test_find_grade_selection_url(self, MockSublandingPage):
@@ -129,3 +140,29 @@ class TestSurveyWizard(TestCase):
         url = _find_grade_selection_url(
             test_request, 'default', MockSublandingPage)
         self.assertEqual(url, "/success")
+
+    def test_survey_wizard_build_views(self):
+        sw = SurveyWizard()
+        sw.survey_key = '3-5'
+        wv = sw.build_views()
+        keys = wv.keys()
+        self.assertIn('3-5', keys)
+
+    def test_student_results(self):
+        test_request = self.factory.get(
+            "/", {'r': self.signed_code},
+            HTTP_HOST="preview.localhost",
+            SERVER_PORT=8000
+        )
+        test_request.COOKIES = {'resultUrl': 'cookie_code'}
+        response = student_results(test_request)
+        self.assertEqual(response.status_code, 302)
+
+    @patch("teachers_digital_platform.views.UrlEncoder.loads")
+    def test_handle_result_url_redirect(self, mock_loads):
+        test_request = self.factory.get(
+            "/", HTTP_HOST="preview.localhost", SERVER_PORT=8000
+        )
+        mock_loads.return_value = None
+        response = _handle_result_url(test_request, "signed", "code", True)
+        self.assertEqual(response.status_code, 302)
